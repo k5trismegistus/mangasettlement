@@ -14,6 +14,10 @@
   --accent-pressed: #0066d6;
   --danger: #ff3b30;
   --shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(248, 248, 252, 0.72);
+  --glass-strong-bg: rgba(248, 248, 252, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
 }
 
 html {
@@ -84,8 +88,15 @@ button {
 .controls {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 9px;
+  gap: 8px;
   margin-bottom: 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  background: var(--glass-bg);
+  padding: 8px;
+  box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
 }
 
 .controlField {
@@ -94,9 +105,9 @@ button {
   gap: 8px;
   align-items: center;
   min-height: 44px;
-  border: 1px solid var(--hairline);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.78);
+  border: 0;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.56);
   padding: 0 12px;
   color: var(--muted);
 }
@@ -121,13 +132,14 @@ button {
 .primaryButton {
   min-height: 44px;
   border-color: transparent;
-  background: var(--accent);
-  color: #ffffff;
-  box-shadow: 0 8px 18px rgba(0, 122, 255, 0.22);
+  border-radius: 18px;
+  background: rgba(0, 122, 255, 0.14);
+  color: var(--accent);
+  box-shadow: none;
 }
 
 .primaryButton:active {
-  background: var(--accent-pressed);
+  background: rgba(0, 122, 255, 0.22);
 }
 
 .jobBar {
@@ -242,20 +254,22 @@ button {
 
 .readerTopBar {
   position: fixed;
-  top: 0;
-  right: 0;
-  left: 0;
+  top: calc(8px + env(safe-area-inset-top));
+  right: 10px;
+  left: 10px;
   z-index: 5;
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr) 44px;
   gap: 8px;
   align-items: center;
-  min-height: calc(52px + env(safe-area-inset-top));
-  padding: calc(8px + env(safe-area-inset-top)) 10px 8px;
-  background: rgba(242, 242, 247, 0.78);
+  min-height: 52px;
+  padding: 8px 10px;
+  background: var(--glass-bg);
   -webkit-backdrop-filter: blur(22px);
   backdrop-filter: blur(22px);
-  border-bottom: 1px solid var(--hairline);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--glass-shadow);
 }
 
 .topReaderButton {
@@ -295,7 +309,7 @@ button {
   align-items: center;
   justify-content: center;
   height: 100svh;
-  padding: calc(54px + env(safe-area-inset-top)) 0 calc(62px + env(safe-area-inset-bottom));
+  padding: calc(70px + env(safe-area-inset-top)) 0 calc(76px + env(safe-area-inset-bottom));
   overflow: hidden;
   touch-action: pinch-zoom;
 }
@@ -304,7 +318,7 @@ button {
   display: block;
   width: 100%;
   max-width: 980px;
-  max-height: calc(100svh - 134px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  max-height: calc(100svh - 164px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   height: auto;
   object-fit: contain;
   box-shadow: 0 1px 10px rgba(0, 0, 0, 0.08);
@@ -322,10 +336,10 @@ button {
 
 .tapZone {
   position: fixed;
-  top: calc(54px + env(safe-area-inset-top));
+  top: calc(70px + env(safe-area-inset-top));
   z-index: 2;
   width: 34%;
-  height: calc(100svh - 126px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  height: calc(100svh - 150px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   border: 0;
   background: transparent;
 }
@@ -340,19 +354,23 @@ button {
 
 .readerBar {
   position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  right: 50%;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  left: auto;
   z-index: 5;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   align-items: center;
-  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-  background: rgba(242, 242, 247, 0.82);
+  width: min(260px, calc(100% - 28px));
+  padding: 8px;
+  transform: translateX(50%);
+  background: var(--glass-bg);
   -webkit-backdrop-filter: blur(22px);
   backdrop-filter: blur(22px);
-  border-top: 1px solid var(--hairline);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--glass-shadow);
 }
 
 .readerAction {
@@ -381,7 +399,7 @@ button {
 .pageHud {
   position: fixed;
   right: 50%;
-  bottom: calc(80px + env(safe-area-inset-bottom));
+  bottom: calc(86px + env(safe-area-inset-bottom));
   z-index: 6;
   transform: translateX(50%);
   border-radius: 999px;
@@ -396,17 +414,18 @@ button {
 
 .readerPanel {
   position: fixed;
-  right: 0;
-  bottom: calc(58px + env(safe-area-inset-bottom));
-  left: 0;
+  right: 10px;
+  bottom: calc(80px + env(safe-area-inset-bottom));
+  left: 10px;
   z-index: 4;
   min-height: min(52vh, 420px);
   max-height: calc(100svh - 116px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   overflow: hidden;
-  background: rgba(242, 242, 247, 0.92);
+  background: var(--glass-strong-bg);
   color: var(--text);
-  border-top: 1px solid var(--hairline);
-  box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--glass-border);
+  border-radius: 26px;
+  box-shadow: var(--glass-shadow);
   -webkit-backdrop-filter: blur(22px);
   backdrop-filter: blur(22px);
 }
@@ -417,7 +436,7 @@ button {
   justify-content: space-between;
   gap: 10px;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.42);
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -576,7 +595,7 @@ button {
 
 @media (min-width: 720px) {
   .controls {
-    grid-template-columns: 1fr 180px 140px;
+    grid-template-columns: 1fr 180px 148px;
   }
 
   .libraryGrid {
@@ -594,11 +613,11 @@ button {
 
   .readerBar {
     width: min(260px, calc(100% - 24px));
-    right: 12px;
+    right: 50%;
     left: auto;
     bottom: 12px;
-    border: 1px solid var(--hairline);
-    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
     padding: 8px;
   }
 
@@ -609,16 +628,31 @@ button {
     top: 12px;
     min-height: 52px;
     padding: 8px 10px;
-    border: 1px solid var(--hairline);
-    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
   }
 
   .readerPanel {
     width: min(760px, calc(100% - 24px));
     right: 12px;
     left: auto;
-    bottom: 72px;
-    border: 1px solid var(--hairline);
-    border-radius: 16px;
+    bottom: 84px;
+    border: 1px solid var(--glass-border);
+    border-radius: 26px;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-bg: #ffffff;
+    --glass-strong-bg: #ffffff;
+    --glass-border: var(--hairline);
+  }
+
+  .readerTopBar,
+  .readerBar,
+  .readerPanel {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
