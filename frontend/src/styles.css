@@ -332,7 +332,7 @@ button {
   left: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   align-items: center;
   padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
@@ -354,6 +354,10 @@ button {
   font-size: 0.64rem;
   font-weight: 650;
   white-space: nowrap;
+}
+
+.readerAction span {
+  font-size: 0.72rem;
 }
 
 .readerAction svg {
@@ -463,6 +467,56 @@ button {
   color: var(--text);
 }
 
+.settingsPanel {
+  display: grid;
+  gap: 18px;
+  padding: 14px 12px 16px;
+}
+
+.settingsPanel section {
+  display: grid;
+  gap: 10px;
+}
+
+.settingsPanel h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.segmentedControl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  border-radius: 16px;
+  background: rgba(118, 118, 128, 0.16);
+  padding: 4px;
+}
+
+.segmentedControl button,
+.settingRow {
+  min-height: 44px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--text);
+  box-shadow: none;
+}
+
+.segmentedControl button.active,
+.settingRow.active {
+  background: #ffffff;
+  color: var(--accent);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.12);
+}
+
+.settingRow {
+  justify-content: flex-start;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
 .metaPanel h1 {
   margin: 0;
   font-size: 1rem;
@@ -524,7 +578,7 @@ button {
   }
 
   .readerBar {
-    width: min(520px, calc(100% - 24px));
+    width: min(260px, calc(100% - 24px));
     right: 12px;
     left: auto;
     bottom: 12px;

@@ -206,7 +206,7 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
   const [binding, setBinding] = useState<'rtl' | 'ltr'>('rtl');
   const [offsetSpread, setOffsetSpread] = useState(false);
   // 読書中はビューアを広く使い、補助情報は必要な時だけ開く。
-  const [activePanel, setActivePanel] = useState<'pages' | 'meta' | null>(null);
+  const [activePanel, setActivePanel] = useState<'pages' | 'settings' | 'meta' | null>(null);
   const [showPageHud, setShowPageHud] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [memo, setMemo] = useState('');
@@ -329,17 +329,9 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
       {showPageHud && <div className="pageHud">{page} / {pages.length}</div>}
 
       <nav className="readerBar">
-        <button className="readerAction" onClick={() => setSpread((value) => !value)}>
-          {spread ? <AutoStoriesOutlinedIcon fontSize="small" /> : <ViewCarouselOutlinedIcon fontSize="small" />}
-          <span>{spread ? '1P' : '2P'}</span>
-        </button>
-        <button className="readerAction" onClick={() => setBinding((value) => (value === 'rtl' ? 'ltr' : 'rtl'))}>
-          <SwapHorizIcon fontSize="small" />
-          <span>{binding === 'rtl' ? '右' : '左'}</span>
-        </button>
-        <button className="readerAction" onClick={() => setOffsetSpread((value) => !value)}>
+        <button className="readerAction" onClick={() => setActivePanel((value) => (value === 'settings' ? null : 'settings'))}>
           <TuneIcon fontSize="small" />
-          <span>開始</span>
+          <span>表示</span>
         </button>
         <button className="readerAction" onClick={() => setActivePanel((value) => (value === 'pages' ? null : 'pages'))}>
           <CollectionsBookmarkOutlinedIcon fontSize="small" />
@@ -350,7 +342,7 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
       {activePanel && (
         <section className="readerPanel">
           <header className="readerPanelHeader">
-            <h2>{activePanel === 'pages' ? 'ページ' : '情報'}</h2>
+            <h2>{panelTitle(activePanel)}</h2>
             <button onClick={() => setActivePanel(null)} aria-label="閉じる">
               <CloseIcon fontSize="small" />
             </button>
@@ -371,6 +363,44 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
                   <span>{item.page_no}</span>
                 </button>
               ))}
+            </div>
+          )}
+
+          {activePanel === 'settings' && (
+            <div className="settingsPanel">
+              <section>
+                <h3>表示</h3>
+                <div className="segmentedControl">
+                  <button className={!spread ? 'active' : ''} onClick={() => setSpread(false)}>
+                    <AutoStoriesOutlinedIcon fontSize="small" />
+                    <span>1ページ</span>
+                  </button>
+                  <button className={spread ? 'active' : ''} onClick={() => setSpread(true)}>
+                    <ViewCarouselOutlinedIcon fontSize="small" />
+                    <span>見開き</span>
+                  </button>
+                </div>
+              </section>
+
+              {spread && (
+                <section>
+                  <h3>見開き設定</h3>
+                  <div className="segmentedControl">
+                    <button className={binding === 'rtl' ? 'active' : ''} onClick={() => setBinding('rtl')}>
+                      <SwapHorizIcon fontSize="small" />
+                      <span>右綴じ</span>
+                    </button>
+                    <button className={binding === 'ltr' ? 'active' : ''} onClick={() => setBinding('ltr')}>
+                      <SwapHorizIcon fontSize="small" />
+                      <span>左綴じ</span>
+                    </button>
+                  </div>
+                  <button className={`settingRow ${offsetSpread ? 'active' : ''}`} onClick={() => setOffsetSpread((value) => !value)}>
+                    <TuneIcon fontSize="small" />
+                    <span>見開き開始位置を1ページずらす</span>
+                  </button>
+                </section>
+              )}
             </div>
           )}
 
@@ -428,6 +458,12 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 function parseRoute(): { libraryId?: number } {
   const match = window.location.pathname.match(/^\/libraries\/(\d+)/);
   return match ? { libraryId: Number(match[1]) } : {};
+}
+
+function panelTitle(panel: 'pages' | 'settings' | 'meta'): string {
+  if (panel === 'pages') return 'ページ';
+  if (panel === 'settings') return '表示設定';
+  return '情報';
 }
 
 createRoot(document.getElementById('root')!).render(<App />);
