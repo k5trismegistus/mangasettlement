@@ -169,6 +169,8 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
   const [spread, setSpread] = useState(false);
   const [binding, setBinding] = useState<'rtl' | 'ltr'>('rtl');
   const [offsetSpread, setOffsetSpread] = useState(false);
+  // 読書中はビューアを広く使い、補助情報は必要な時だけ開く。
+  const [activePanel, setActivePanel] = useState<'pages' | 'meta' | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [memo, setMemo] = useState('');
   const touchStart = useRef<number | null>(null);
@@ -267,33 +269,55 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
       <nav className="readerBar">
         <button onClick={() => navigate('/')}>戻る</button>
         <span>{page} / {pages.length}</span>
-        <button onClick={() => setSpread((value) => !value)}>{spread ? '1ページ' : '見開き'}</button>
-        <button onClick={() => setBinding((value) => (value === 'rtl' ? 'ltr' : 'rtl'))}>{binding === 'rtl' ? '右綴じ' : '左綴じ'}</button>
-        <button onClick={() => setOffsetSpread((value) => !value)}>開始ずらし</button>
+        <button onClick={() => setSpread((value) => !value)}>{spread ? '1P' : '2P'}</button>
+        <button onClick={() => setBinding((value) => (value === 'rtl' ? 'ltr' : 'rtl'))}>{binding === 'rtl' ? '右' : '左'}</button>
+        <button onClick={() => setOffsetSpread((value) => !value)}>開始</button>
+        <button onClick={() => setActivePanel((value) => (value === 'pages' ? null : 'pages'))}>ページ</button>
+        <button onClick={() => setActivePanel((value) => (value === 'meta' ? null : 'meta'))}>情報</button>
       </nav>
 
-      <section className="thumbStrip">
-        {pages.map((item) => (
-          <button key={item.page_no} className={item.page_no === page ? 'active' : ''} onClick={() => setPage(item.page_no)}>
-            <img src={item.thumbnail_url} alt={`${item.page_no}ページ`} loading="lazy" />
-            <span>{item.page_no}</span>
-          </button>
-        ))}
-      </section>
+      {activePanel && (
+        <section className="readerPanel">
+          <header className="readerPanelHeader">
+            <h2>{activePanel === 'pages' ? 'ページ' : '情報'}</h2>
+            <button onClick={() => setActivePanel(null)}>閉じる</button>
+          </header>
 
-      <section className="metaPanel">
-        <h1>{library.file_name}</h1>
-        <label>
-          タグ
-          <input value={tagInput} onChange={(event) => setTagInput(event.target.value)} placeholder="tag1, tag2" />
-        </label>
-        <button onClick={saveTags}>タグ保存</button>
-        <label>
-          メモ
-          <textarea value={memo} onChange={(event) => setMemo(event.target.value)} />
-        </label>
-        <button onClick={saveMemo}>メモ保存</button>
-      </section>
+          {activePanel === 'pages' && (
+            <div className="thumbStrip">
+              {pages.map((item) => (
+                <button
+                  key={item.page_no}
+                  className={item.page_no === page ? 'active' : ''}
+                  onClick={() => {
+                    setPage(item.page_no);
+                    setActivePanel(null);
+                  }}
+                >
+                  <img src={item.thumbnail_url} alt={`${item.page_no}ページ`} loading="lazy" />
+                  <span>{item.page_no}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {activePanel === 'meta' && (
+            <div className="metaPanel">
+              <h1>{library.file_name}</h1>
+              <label>
+                タグ
+                <input value={tagInput} onChange={(event) => setTagInput(event.target.value)} placeholder="tag1, tag2" />
+              </label>
+              <button onClick={saveTags}>タグ保存</button>
+              <label>
+                メモ
+                <textarea value={memo} onChange={(event) => setMemo(event.target.value)} />
+              </label>
+              <button onClick={saveMemo}>メモ保存</button>
+            </div>
+          )}
+        </section>
+      )}
     </main>
   );
 }
