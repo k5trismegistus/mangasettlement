@@ -1,0 +1,7 @@
+/dist/**
+/data/**
+/library/**
+/thumbnail/**
+/node_modules
+
+!/**/.keep
