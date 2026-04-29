@@ -207,9 +207,11 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
   const [offsetSpread, setOffsetSpread] = useState(false);
   // 読書中はビューアを広く使い、補助情報は必要な時だけ開く。
   const [activePanel, setActivePanel] = useState<'pages' | 'meta' | null>(null);
+  const [showPageHud, setShowPageHud] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [memo, setMemo] = useState('');
   const touchStart = useRef<number | null>(null);
+  const pageHudReady = useRef(false);
 
   useEffect(() => {
     void api<LibraryDetail>(`/api/libraries/${libraryId}`).then((data) => {
@@ -242,6 +244,17 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
     }
     return () => links.forEach((link) => link.remove());
   }, [page, pages]);
+
+  useEffect(() => {
+    if (!pageHudReady.current) {
+      pageHudReady.current = true;
+      return;
+    }
+
+    setShowPageHud(true);
+    const timer = window.setTimeout(() => setShowPageHud(false), 900);
+    return () => window.clearTimeout(timer);
+  }, [page]);
 
   const next = () => setPage((current) => Math.min(pages.length, current + (spread && current > 1 ? 2 : 1)));
   const previous = () => setPage((current) => Math.max(1, current - (spread && current > 2 ? 2 : 1)));
@@ -282,6 +295,17 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
 
   return (
     <main className="reader">
+      <nav className="readerTopBar">
+        <button className="topReaderButton" onClick={() => navigate('/')} aria-label="戻る">
+          <ArrowBackIosNewIcon fontSize="small" />
+          <span>戻る</span>
+        </button>
+        <span className="readerTitle">{library.file_name}</span>
+        <button className="topReaderButton iconOnly" onClick={() => setActivePanel((value) => (value === 'meta' ? null : 'meta'))} aria-label="情報">
+          <InfoOutlinedIcon fontSize="small" />
+        </button>
+      </nav>
+
       <section
         className={`viewer ${spread && page !== 1 ? 'spread' : ''}`}
         onTouchStart={(event) => {
@@ -302,12 +326,9 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
         <button className="tapZone right" aria-label="前後ページ移動" onClick={() => goByDirection('right')} />
       </section>
 
+      {showPageHud && <div className="pageHud">{page} / {pages.length}</div>}
+
       <nav className="readerBar">
-        <button className="readerAction" onClick={() => navigate('/')}>
-          <ArrowBackIosNewIcon fontSize="small" />
-          <span>戻る</span>
-        </button>
-        <span className="pageCounter">{page} / {pages.length}</span>
         <button className="readerAction" onClick={() => setSpread((value) => !value)}>
           {spread ? <AutoStoriesOutlinedIcon fontSize="small" /> : <ViewCarouselOutlinedIcon fontSize="small" />}
           <span>{spread ? '1P' : '2P'}</span>
@@ -323,10 +344,6 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
         <button className="readerAction" onClick={() => setActivePanel((value) => (value === 'pages' ? null : 'pages'))}>
           <CollectionsBookmarkOutlinedIcon fontSize="small" />
           <span>ページ</span>
-        </button>
-        <button className="readerAction" onClick={() => setActivePanel((value) => (value === 'meta' ? null : 'meta'))}>
-          <InfoOutlinedIcon fontSize="small" />
-          <span>情報</span>
         </button>
       </nav>
 

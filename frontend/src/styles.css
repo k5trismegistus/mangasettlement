@@ -228,8 +228,51 @@ button {
 .reader {
   min-height: 100vh;
   padding-bottom: 72px;
-  background: #000000;
-  color: #ffffff;
+  background: var(--app-bg);
+  color: var(--text);
+}
+
+.readerTopBar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 44px;
+  gap: 8px;
+  align-items: center;
+  min-height: calc(52px + env(safe-area-inset-top));
+  padding: calc(8px + env(safe-area-inset-top)) 10px 8px;
+  background: rgba(242, 242, 247, 0.78);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.topReaderButton {
+  min-height: 36px;
+  padding: 0 10px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--accent);
+}
+
+.topReaderButton.iconOnly {
+  min-width: 36px;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(118, 118, 128, 0.12);
+}
+
+.readerTitle {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 650;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .viewer {
@@ -238,8 +281,8 @@ button {
   /* Dynamic Island と下部操作バーを避けた範囲でページを中央寄せする。 */
   align-items: center;
   justify-content: center;
-  min-height: calc(100svh - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-  padding: env(safe-area-inset-top) 0 0;
+  min-height: 100svh;
+  padding: calc(54px + env(safe-area-inset-top)) 0 calc(62px + env(safe-area-inset-bottom));
   overflow: auto;
   touch-action: pan-y pinch-zoom;
 }
@@ -248,9 +291,10 @@ button {
   display: block;
   width: 100%;
   max-width: 980px;
-  max-height: calc(100svh - 86px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  max-height: calc(100svh - 134px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   height: auto;
   object-fit: contain;
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.08);
   user-select: none;
 }
 
@@ -288,22 +332,14 @@ button {
   left: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 5px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
   align-items: center;
   padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-  background: rgba(28, 28, 30, 0.76);
+  background: rgba(242, 242, 247, 0.82);
   -webkit-backdrop-filter: blur(22px);
   backdrop-filter: blur(22px);
-  border-top: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-.pageCounter {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.78rem;
-  font-weight: 650;
-  white-space: nowrap;
+  border-top: 1px solid var(--hairline);
 }
 
 .readerAction {
@@ -312,7 +348,7 @@ button {
   gap: 1px;
   min-height: 42px;
   padding: 4px 2px;
-  color: #ffffff;
+  color: var(--accent);
   background: transparent;
   border-color: transparent;
   font-size: 0.64rem;
@@ -322,7 +358,23 @@ button {
 
 .readerAction svg {
   justify-self: center;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--accent);
+}
+
+.pageHud {
+  position: fixed;
+  right: 50%;
+  bottom: calc(80px + env(safe-area-inset-bottom));
+  z-index: 6;
+  transform: translateX(50%);
+  border-radius: 999px;
+  background: rgba(28, 28, 30, 0.74);
+  color: #ffffff;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
 }
 
 .readerPanel {
@@ -472,13 +524,24 @@ button {
   }
 
   .readerBar {
-    width: min(760px, calc(100% - 24px));
+    width: min(520px, calc(100% - 24px));
     right: 12px;
     left: auto;
     bottom: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    border: 1px solid var(--hairline);
     border-radius: 16px;
     padding: 8px;
+  }
+
+  .readerTopBar {
+    width: min(760px, calc(100% - 24px));
+    right: 12px;
+    left: auto;
+    top: 12px;
+    min-height: 52px;
+    padding: 8px 10px;
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
   }
 
   .readerPanel {
