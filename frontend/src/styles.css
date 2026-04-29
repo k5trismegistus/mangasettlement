@@ -162,7 +162,6 @@ button {
   /* Dynamic Island と下部操作バーを避けた範囲でページを中央寄せする。 */
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   min-height: calc(100svh - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   padding: env(safe-area-inset-top) 0 0;
   overflow: auto;
@@ -173,7 +172,6 @@ button {
   display: block;
   width: 100%;
   max-width: 980px;
-  max-height: calc(100vh - 86px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   max-height: calc(100svh - 86px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   height: auto;
   object-fit: contain;
