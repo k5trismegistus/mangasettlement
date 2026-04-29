@@ -239,7 +239,7 @@ button {
   left: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: 76px minmax(0, 1fr) 44px;
+  grid-template-columns: 96px minmax(0, 1fr) 44px;
   gap: 8px;
   align-items: center;
   min-height: calc(52px + env(safe-area-inset-top));
@@ -251,14 +251,19 @@ button {
 }
 
 .topReaderButton {
+  display: inline-flex;
+  min-width: 84px;
   min-height: 36px;
-  padding: 0 10px;
+  justify-content: flex-start;
+  padding: 0 8px;
   border-color: transparent;
   background: transparent;
   color: var(--accent);
+  white-space: nowrap;
 }
 
 .topReaderButton.iconOnly {
+  justify-content: center;
   min-width: 36px;
   padding: 0;
   border-radius: 999px;
@@ -283,8 +288,8 @@ button {
   justify-content: center;
   min-height: 100svh;
   padding: calc(54px + env(safe-area-inset-top)) 0 calc(62px + env(safe-area-inset-bottom));
-  overflow: auto;
-  touch-action: pan-y pinch-zoom;
+  overflow: hidden;
+  touch-action: pinch-zoom;
 }
 
 .viewer img {
@@ -309,10 +314,10 @@ button {
 
 .tapZone {
   position: fixed;
-  top: 0;
+  top: calc(54px + env(safe-area-inset-top));
   z-index: 2;
   width: 34%;
-  height: 72vh;
+  height: calc(100svh - 126px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   border: 0;
   background: transparent;
 }
@@ -387,8 +392,9 @@ button {
   bottom: calc(58px + env(safe-area-inset-bottom));
   left: 0;
   z-index: 4;
-  max-height: min(46vh, 360px);
-  overflow: auto;
+  min-height: min(52vh, 420px);
+  max-height: calc(100svh - 116px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow: hidden;
   background: rgba(242, 242, 247, 0.92);
   color: var(--text);
   border-top: 1px solid var(--hairline);
@@ -398,9 +404,6 @@ button {
 }
 
 .readerPanelHeader {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -465,6 +468,10 @@ button {
   padding: 12px;
   background: transparent;
   color: var(--text);
+}
+
+.readerPanel.metaOpen {
+  min-height: min(68vh, 560px);
 }
 
 .settingsPanel {
@@ -555,7 +562,7 @@ button {
 }
 
 .metaPanel textarea {
-  min-height: 96px;
+  min-height: 132px;
   resize: vertical;
 }
 
