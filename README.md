@@ -43,3 +43,11 @@ npm run start
 - `npm run start`: ビルド済みアプリを起動
 - `npm run dev`: サーバー watch と Vite dev server を起動
 - `npm run typecheck`: サーバーとフロントエンドの型チェック
+
+## コード構成
+
+- `src/server.ts`: 起動、認証、API登録、フロントエンド配信
+- `src/routes/`: Fastify の API エンドポイント
+- `src/repositories/`: SQLite の読み書き
+- `src/http/`: リクエスト値の扱いとレスポンス共通処理
+- `src/media/`: 画像レスポンス用の補助処理
