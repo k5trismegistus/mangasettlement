@@ -148,7 +148,6 @@ function HomePage({ navigate }: { navigate: (path: string) => void }) {
             <div className="libraryCardBody">
               <h2>{library.file_name}</h2>
               <p>{library.page_count}ページ</p>
-              <p>{formatDate(library.updated_at)}</p>
               <div className="tagList">
                 {library.tags.map((item) => (
                   <span key={item}>{item}</span>
@@ -326,10 +325,6 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 function parseRoute(): { libraryId?: number } {
   const match = window.location.pathname.match(/^\/libraries\/(\d+)/);
   return match ? { libraryId: Number(match[1]) } : {};
-}
-
-function formatDate(epoch: number): string {
-  return new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(epoch * 1000));
 }
 
 createRoot(document.getElementById('root')!).render(<App />);

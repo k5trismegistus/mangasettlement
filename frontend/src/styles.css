@@ -84,15 +84,16 @@ button {
 
 .libraryGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 14px;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
 .libraryCard {
   display: grid;
-  grid-template-columns: 96px 1fr;
+  grid-template-columns: 78px minmax(0, 1fr);
   gap: 12px;
-  min-height: 148px;
+  align-items: center;
+  min-height: 112px;
   border: 1px solid #d7dce3;
   border-radius: 8px;
   background: #ffffff;
@@ -101,21 +102,22 @@ button {
 }
 
 .libraryCard img {
-  width: 96px;
-  height: 128px;
+  width: 78px;
+  height: 104px;
   object-fit: cover;
   border-radius: 4px;
   background: #e5e7eb;
 }
 
 .libraryCard h2 {
-  display: -webkit-box;
   margin: 0 0 6px;
-  overflow: hidden;
+  overflow-wrap: anywhere;
   font-size: 0.98rem;
   line-height: 1.35;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+}
+
+.libraryCardBody {
+  min-width: 0;
 }
 
 .libraryCard p {
@@ -291,13 +293,17 @@ button {
     grid-template-columns: 1fr 180px 140px;
   }
 
+  .libraryGrid {
+    width: min(760px, 100%);
+  }
+
   .libraryCard {
-    grid-template-columns: 1fr;
+    grid-template-columns: 88px minmax(0, 1fr);
   }
 
   .libraryCard img {
-    width: 100%;
-    height: 240px;
+    width: 88px;
+    height: 118px;
   }
 
   .readerBar {
