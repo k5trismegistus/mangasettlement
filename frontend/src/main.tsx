@@ -340,7 +340,7 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
       </nav>
 
       {activePanel && (
-        <section className={`readerPanel ${activePanel === 'meta' ? 'metaOpen' : ''}`}>
+        <section className={`readerPanel ${activePanel === 'meta' ? 'metaOpen' : ''} ${activePanel === 'pages' ? 'pagesOpen' : ''}`}>
           <header className="readerPanelHeader">
             <h2>{panelTitle(activePanel)}</h2>
             <button onClick={() => setActivePanel(null)} aria-label="閉じる">
