@@ -1,5 +1,21 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
+import AutoStoriesOutlinedIcon from '@mui/icons-material/AutoStoriesOutlined';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import CloseIcon from '@mui/icons-material/Close';
+import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import LibraryBooksOutlinedIcon from '@mui/icons-material/LibraryBooksOutlined';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
+import NotesOutlinedIcon from '@mui/icons-material/NotesOutlined';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import SearchIcon from '@mui/icons-material/Search';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import TuneIcon from '@mui/icons-material/Tune';
+import ViewCarouselOutlinedIcon from '@mui/icons-material/ViewCarouselOutlined';
 import './styles.css';
 
 type Library = {
@@ -118,17 +134,24 @@ function HomePage({ navigate }: { navigate: (path: string) => void }) {
       </header>
 
       <section className="controls">
-        <input value={q} onChange={(event) => setQ(event.target.value)} placeholder="ファイル名で検索" aria-label="ファイル名で検索" />
-        <select value={tag} onChange={(event) => setTag(event.target.value)} aria-label="タグで検索">
-          <option value="">すべてのタグ</option>
-          {tags.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
-        <button onClick={refresh} disabled={refreshJob?.status === 'queued' || refreshJob?.status === 'running'}>
-          リフレッシュ
+        <label className="controlField">
+          <SearchIcon fontSize="small" />
+          <input value={q} onChange={(event) => setQ(event.target.value)} placeholder="ファイル名で検索" aria-label="ファイル名で検索" />
+        </label>
+        <label className="controlField">
+          <LocalOfferOutlinedIcon fontSize="small" />
+          <select value={tag} onChange={(event) => setTag(event.target.value)} aria-label="タグで検索">
+            <option value="">すべてのタグ</option>
+            {tags.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button className="primaryButton" onClick={refresh} disabled={refreshJob?.status === 'queued' || refreshJob?.status === 'running'}>
+          <RefreshIcon fontSize="small" />
+          <span>リフレッシュ</span>
         </button>
       </section>
 
@@ -143,11 +166,23 @@ function HomePage({ navigate }: { navigate: (path: string) => void }) {
       {!loading && libraries.length === 0 ? <p className="empty">ライブラリがありません</p> : null}
       <section className="libraryGrid">
         {libraries.map((library) => (
-          <article key={library.id} className="libraryCard" onClick={() => navigate(`/libraries/${library.id}`)}>
+          <article
+            key={library.id}
+            className="libraryCard"
+            onClick={() => navigate(`/libraries/${library.id}`)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') navigate(`/libraries/${library.id}`);
+            }}
+            role="button"
+            tabIndex={0}
+          >
             <img src={library.cover_thumbnail_url} alt="" loading="lazy" />
             <div className="libraryCardBody">
               <h2>{library.file_name}</h2>
-              <p>{library.page_count}ページ</p>
+              <p>
+                <LibraryBooksOutlinedIcon fontSize="inherit" />
+                {library.page_count}ページ
+              </p>
               <div className="tagList">
                 {library.tags.map((item) => (
                   <span key={item}>{item}</span>
@@ -155,6 +190,7 @@ function HomePage({ navigate }: { navigate: (path: string) => void }) {
               </div>
               {library.is_missing && <strong className="missing">ファイルなし</strong>}
             </div>
+            <ChevronRightIcon className="cardChevron" fontSize="small" />
           </article>
         ))}
       </section>
@@ -267,20 +303,40 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
       </section>
 
       <nav className="readerBar">
-        <button onClick={() => navigate('/')}>戻る</button>
-        <span>{page} / {pages.length}</span>
-        <button onClick={() => setSpread((value) => !value)}>{spread ? '1P' : '2P'}</button>
-        <button onClick={() => setBinding((value) => (value === 'rtl' ? 'ltr' : 'rtl'))}>{binding === 'rtl' ? '右' : '左'}</button>
-        <button onClick={() => setOffsetSpread((value) => !value)}>開始</button>
-        <button onClick={() => setActivePanel((value) => (value === 'pages' ? null : 'pages'))}>ページ</button>
-        <button onClick={() => setActivePanel((value) => (value === 'meta' ? null : 'meta'))}>情報</button>
+        <button className="readerAction" onClick={() => navigate('/')}>
+          <ArrowBackIosNewIcon fontSize="small" />
+          <span>戻る</span>
+        </button>
+        <span className="pageCounter">{page} / {pages.length}</span>
+        <button className="readerAction" onClick={() => setSpread((value) => !value)}>
+          {spread ? <AutoStoriesOutlinedIcon fontSize="small" /> : <ViewCarouselOutlinedIcon fontSize="small" />}
+          <span>{spread ? '1P' : '2P'}</span>
+        </button>
+        <button className="readerAction" onClick={() => setBinding((value) => (value === 'rtl' ? 'ltr' : 'rtl'))}>
+          <SwapHorizIcon fontSize="small" />
+          <span>{binding === 'rtl' ? '右' : '左'}</span>
+        </button>
+        <button className="readerAction" onClick={() => setOffsetSpread((value) => !value)}>
+          <TuneIcon fontSize="small" />
+          <span>開始</span>
+        </button>
+        <button className="readerAction" onClick={() => setActivePanel((value) => (value === 'pages' ? null : 'pages'))}>
+          <CollectionsBookmarkOutlinedIcon fontSize="small" />
+          <span>ページ</span>
+        </button>
+        <button className="readerAction" onClick={() => setActivePanel((value) => (value === 'meta' ? null : 'meta'))}>
+          <InfoOutlinedIcon fontSize="small" />
+          <span>情報</span>
+        </button>
       </nav>
 
       {activePanel && (
         <section className="readerPanel">
           <header className="readerPanelHeader">
             <h2>{activePanel === 'pages' ? 'ページ' : '情報'}</h2>
-            <button onClick={() => setActivePanel(null)}>閉じる</button>
+            <button onClick={() => setActivePanel(null)} aria-label="閉じる">
+              <CloseIcon fontSize="small" />
+            </button>
           </header>
 
           {activePanel === 'pages' && (
@@ -305,15 +361,21 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
             <div className="metaPanel">
               <h1>{library.file_name}</h1>
               <label>
-                タグ
+                <span><LocalOfferOutlinedIcon fontSize="small" />タグ</span>
                 <input value={tagInput} onChange={(event) => setTagInput(event.target.value)} placeholder="tag1, tag2" />
               </label>
-              <button onClick={saveTags}>タグ保存</button>
+              <button onClick={saveTags}>
+                <SaveOutlinedIcon fontSize="small" />
+                <span>タグ保存</span>
+              </button>
               <label>
-                メモ
+                <span><NotesOutlinedIcon fontSize="small" />メモ</span>
                 <textarea value={memo} onChange={(event) => setMemo(event.target.value)} />
               </label>
-              <button onClick={saveMemo}>メモ保存</button>
+              <button onClick={saveMemo}>
+                <ArticleOutlinedIcon fontSize="small" />
+                <span>メモ保存</span>
+              </button>
             </div>
           )}
         </section>
