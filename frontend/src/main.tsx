@@ -289,6 +289,7 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
   const [dragX, setDragX] = useState(0);
   const [slideAnimating, setSlideAnimating] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
   const [memo, setMemo] = useState('');
   const gesture = useRef<GestureState>({ mode: 'none' });
   const pageHudReady = useRef(false);
@@ -300,7 +301,14 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
       setMemo(data.memo ?? '');
     });
     void api<{ pages: Page[] }>(`/api/libraries/${libraryId}/pages`).then((data) => setPages(data.pages));
+    void fetchTags().then(setTagSuggestions);
   }, [libraryId]);
+
+  const tagValues = useMemo(() => parseTagInput(tagInput), [tagInput]);
+  const availableTagSuggestions = useMemo(
+    () => tagSuggestions.filter((item) => !tagValues.includes(item)),
+    [tagSuggestions, tagValues]
+  );
 
   const visiblePages = useMemo(() => {
     if (!spread || page === 1) return [page];
@@ -465,13 +473,20 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
   };
 
   const saveTags = async () => {
-    const tags = tagInput.split(',').map((item) => item.trim()).filter(Boolean);
+    const tags = parseTagInput(tagInput);
     const result = await api<{ tags: string[] }>(`/api/libraries/${libraryId}/tags`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tags })
     });
     setLibrary((current) => (current ? { ...current, tags: result.tags } : current));
+    setTagSuggestions((current) => Array.from(new Set([...current, ...result.tags])).sort((a, b) => a.localeCompare(b)));
+  };
+
+  const appendTag = (tagName: string) => {
+    // 既存タグの候補は重複させず、カンマ区切り入力へ自然に追加する。
+    const nextTags = Array.from(new Set([...tagValues, tagName]));
+    setTagInput(nextTags.join(', '));
   };
 
   const saveMemo = async () => {
@@ -648,6 +663,15 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
                 <span><LocalOfferOutlinedIcon fontSize="small" />タグ</span>
                 <input value={tagInput} onChange={(event) => setTagInput(event.target.value)} placeholder="tag1, tag2" />
               </label>
+              {availableTagSuggestions.length > 0 && (
+                <div className="tagSuggestions" aria-label="既存タグ候補">
+                  {availableTagSuggestions.map((item) => (
+                    <button key={item} type="button" onClick={() => appendTag(item)}>
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              )}
               <button onClick={saveTags}>
                 <SaveOutlinedIcon fontSize="small" />
                 <span>タグ保存</span>
@@ -694,6 +718,10 @@ async function loadLibraries(
 async function fetchTags(): Promise<string[]> {
   const data = await api<{ tags: string[] }>('/api/tags');
   return data.tags;
+}
+
+function parseTagInput(value: string): string[] {
+  return Array.from(new Set(value.split(',').map((item) => item.trim()).filter(Boolean)));
 }
 
 async function api<T>(url: string, init?: RequestInit): Promise<T> {
