@@ -289,6 +289,11 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
     setZoom({ scale: 1, x: 0, y: 0 });
     setDragX(0);
   };
+  const togglePanel = (panel: 'pages' | 'settings' | 'meta') => {
+    // メニューを開く操作では、上下コントロールも必ず表示状態に戻す。
+    setControlsVisible(true);
+    setActivePanel((value) => (value === panel ? null : panel));
+  };
   const pageForDirection = (current: number, direction: 'left' | 'right') => {
     const forward = binding === 'rtl' ? direction === 'left' : direction === 'right';
     return forward ? nextPage(current) : previousPage(current);
@@ -443,7 +448,12 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
           <span>戻る</span>
         </button>
         <span className="readerTitle">{library.file_name}</span>
-        <button className="topReaderButton iconOnly" onClick={() => setActivePanel((value) => (value === 'meta' ? null : 'meta'))} aria-label="情報">
+        <button
+          className={`topReaderButton iconOnly ${activePanel === 'meta' ? 'active' : ''}`}
+          onClick={() => togglePanel('meta')}
+          aria-label="情報"
+          aria-pressed={activePanel === 'meta'}
+        >
           <InfoOutlinedIcon fontSize="small" />
         </button>
       </nav>
@@ -479,18 +489,26 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
       {showPageHud && <div className="pageHud">{page} / {pages.length}</div>}
 
       <nav className="readerBar">
-        <button className="readerAction" onClick={() => setActivePanel((value) => (value === 'settings' ? null : 'settings'))}>
+        <button
+          className={`readerAction ${activePanel === 'settings' ? 'active' : ''}`}
+          onClick={() => togglePanel('settings')}
+          aria-pressed={activePanel === 'settings'}
+        >
           <TuneIcon fontSize="small" />
           <span>表示</span>
         </button>
-        <button className="readerAction" onClick={() => setActivePanel((value) => (value === 'pages' ? null : 'pages'))}>
+        <button
+          className={`readerAction ${activePanel === 'pages' ? 'active' : ''}`}
+          onClick={() => togglePanel('pages')}
+          aria-pressed={activePanel === 'pages'}
+        >
           <CollectionsBookmarkOutlinedIcon fontSize="small" />
           <span>ページ</span>
         </button>
       </nav>
 
       {activePanel && (
-        <section className={`readerPanel ${activePanel === 'meta' ? 'metaOpen' : ''} ${activePanel === 'pages' ? 'pagesOpen' : ''}`}>
+        <section className={`readerPanel ${activePanel}Open`}>
           <header className="readerPanelHeader">
             <h2>{panelTitle(activePanel)}</h2>
             <button onClick={() => setActivePanel(null)} aria-label="閉じる">
