@@ -55,6 +55,29 @@ type Job = {
   message: string;
 };
 
+type ZoomState = {
+  scale: number;
+  x: number;
+  y: number;
+};
+
+type GestureState =
+  | { mode: 'none' }
+  | {
+      mode: 'swipe';
+      startX: number;
+      startY: number;
+      startedAt: number;
+      moved: boolean;
+    }
+  | {
+      mode: 'pinch';
+      startDistance: number;
+      startMidX: number;
+      startMidY: number;
+      startZoom: ZoomState;
+    };
+
 function App() {
   const [route, setRoute] = useState(() => parseRoute());
 
@@ -207,10 +230,14 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
   const [offsetSpread, setOffsetSpread] = useState(false);
   // 読書中はビューアを広く使い、補助情報は必要な時だけ開く。
   const [activePanel, setActivePanel] = useState<'pages' | 'settings' | 'meta' | null>(null);
+  const [controlsVisible, setControlsVisible] = useState(true);
   const [showPageHud, setShowPageHud] = useState(false);
+  const [zoom, setZoom] = useState<ZoomState>({ scale: 1, x: 0, y: 0 });
+  const [dragX, setDragX] = useState(0);
+  const [slideAnimating, setSlideAnimating] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [memo, setMemo] = useState('');
-  const touchStart = useRef<number | null>(null);
+  const gesture = useRef<GestureState>({ mode: 'none' });
   const pageHudReady = useRef(false);
 
   useEffect(() => {
@@ -256,12 +283,127 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
     return () => window.clearTimeout(timer);
   }, [page]);
 
-  const next = () => setPage((current) => Math.min(pages.length, current + (spread && current > 1 ? 2 : 1)));
-  const previous = () => setPage((current) => Math.max(1, current - (spread && current > 2 ? 2 : 1)));
-  const goByDirection = (direction: 'left' | 'right') => {
+  const nextPage = (current: number) => Math.min(pages.length, current + (spread && current > 1 ? 2 : 1));
+  const previousPage = (current: number) => Math.max(1, current - (spread && current > 2 ? 2 : 1));
+  const resetViewerTransform = () => {
+    setZoom({ scale: 1, x: 0, y: 0 });
+    setDragX(0);
+  };
+  const pageForDirection = (current: number, direction: 'left' | 'right') => {
     const forward = binding === 'rtl' ? direction === 'left' : direction === 'right';
-    if (forward) next();
-    else previous();
+    return forward ? nextPage(current) : previousPage(current);
+  };
+  const movePage = (direction: 'left' | 'right') => {
+    const target = pageForDirection(page, direction);
+    setSlideAnimating(true);
+
+    if (target === page) {
+      setDragX(0);
+      window.setTimeout(() => setSlideAnimating(false), 160);
+      return;
+    }
+
+    setDragX(direction === 'left' ? -window.innerWidth : window.innerWidth);
+    window.setTimeout(() => {
+      setPage(target);
+      setSlideAnimating(false);
+      resetViewerTransform();
+    }, 180);
+  };
+  const handleViewerTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+    if (event.touches.length === 2) {
+      event.preventDefault();
+      const mid = touchMidpoint(event.touches[0], event.touches[1]);
+      gesture.current = {
+        mode: 'pinch',
+        startDistance: touchDistance(event.touches[0], event.touches[1]),
+        startMidX: mid.x,
+        startMidY: mid.y,
+        startZoom: zoom
+      };
+      setSlideAnimating(false);
+      return;
+    }
+
+    if (event.touches.length === 1) {
+      const touch = event.touches[0];
+      gesture.current = {
+        mode: 'swipe',
+        startX: touch.clientX,
+        startY: touch.clientY,
+        startedAt: Date.now(),
+        moved: false
+      };
+      setSlideAnimating(false);
+    }
+  };
+  const handleViewerTouchMove = (event: React.TouchEvent<HTMLElement>) => {
+    if (gesture.current.mode === 'pinch' && event.touches.length === 2) {
+      event.preventDefault();
+      const mid = touchMidpoint(event.touches[0], event.touches[1]);
+      const scale = clampNumber((touchDistance(event.touches[0], event.touches[1]) / gesture.current.startDistance) * gesture.current.startZoom.scale, 1, 4);
+      setZoom({
+        scale,
+        x: scale > 1.01 ? gesture.current.startZoom.x + mid.x - gesture.current.startMidX : 0,
+        y: scale > 1.01 ? gesture.current.startZoom.y + mid.y - gesture.current.startMidY : 0
+      });
+      return;
+    }
+
+    if (gesture.current.mode === 'swipe' && event.touches.length === 1) {
+      const touch = event.touches[0];
+      const dx = touch.clientX - gesture.current.startX;
+      const dy = touch.clientY - gesture.current.startY;
+      if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) {
+        event.preventDefault();
+        gesture.current = { ...gesture.current, moved: true };
+        setDragX(dx);
+      }
+    }
+  };
+  const handleViewerTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
+    if (gesture.current.mode === 'pinch') {
+      gesture.current = { mode: 'none' };
+      return;
+    }
+
+    if (gesture.current.mode !== 'swipe') return;
+
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - gesture.current.startX;
+    const dy = touch.clientY - gesture.current.startY;
+    const isTap = Date.now() - gesture.current.startedAt < 220 && Math.abs(dx) < 10 && Math.abs(dy) < 10;
+
+    if (isTap) {
+      handleViewerTap(touch.clientX);
+      gesture.current = { mode: 'none' };
+      return;
+    }
+
+    const threshold = Math.min(120, window.innerWidth * 0.24);
+    if (Math.abs(dx) > threshold && Math.abs(dx) > Math.abs(dy)) {
+      movePage(dx < 0 ? 'left' : 'right');
+    } else {
+      setSlideAnimating(true);
+      setDragX(0);
+      window.setTimeout(() => setSlideAnimating(false), 160);
+    }
+    gesture.current = { mode: 'none' };
+  };
+  const handleViewerTap = (clientX: number) => {
+    const width = window.innerWidth;
+    if (clientX < width * 0.28) {
+      movePage('right');
+      return;
+    }
+    if (clientX > width * 0.72) {
+      movePage('left');
+      return;
+    }
+    setControlsVisible((visible) => {
+      if (visible) setActivePanel(null);
+      return !visible;
+    });
   };
 
   const saveTags = async () => {
@@ -294,7 +436,7 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
   }
 
   return (
-    <main className="reader">
+    <main className={`reader ${controlsVisible ? '' : 'controlsHidden'}`}>
       <nav className="readerTopBar">
         <button className="topReaderButton" onClick={() => navigate('/')} aria-label="戻る">
           <ArrowBackIosNewIcon fontSize="small" />
@@ -308,22 +450,30 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
 
       <section
         className={`viewer ${spread && page !== 1 ? 'spread' : ''}`}
-        onTouchStart={(event) => {
-          touchStart.current = event.touches[0].clientX;
-        }}
-        onTouchEnd={(event) => {
-          if (touchStart.current === null) return;
-          const delta = event.changedTouches[0].clientX - touchStart.current;
-          if (Math.abs(delta) > 40) goByDirection(delta < 0 ? 'left' : 'right');
-          touchStart.current = null;
+        onTouchStart={handleViewerTouchStart}
+        onTouchMove={handleViewerTouchMove}
+        onTouchEnd={handleViewerTouchEnd}
+        onTouchCancel={() => {
+          gesture.current = { mode: 'none' };
+          setSlideAnimating(true);
+          setDragX(0);
+          window.setTimeout(() => setSlideAnimating(false), 160);
         }}
       >
-        <button className="tapZone left" aria-label="前後ページ移動" onClick={() => goByDirection('left')} />
-        {visiblePages.map((pageNo) => {
-          const pageData = pages[pageNo - 1];
-          return pageData ? <img key={pageNo} src={pageData.image_url} alt={`${pageNo}ページ`} /> : null;
-        })}
-        <button className="tapZone right" aria-label="前後ページ移動" onClick={() => goByDirection('right')} />
+        <div
+          className={`viewerSurface ${slideAnimating ? 'animating' : ''}`}
+          style={{ transform: `translate3d(${dragX}px, 0, 0)` }}
+        >
+          <div
+            className="imageTransform"
+            style={{ transform: `translate3d(${zoom.x}px, ${zoom.y}px, 0) scale(${zoom.scale})` }}
+          >
+            {visiblePages.map((pageNo) => {
+              const pageData = pages[pageNo - 1];
+              return pageData ? <img key={pageNo} src={pageData.image_url} alt={`${pageNo}ページ`} draggable={false} /> : null;
+            })}
+          </div>
+        </div>
       </section>
 
       {showPageHud && <div className="pageHud">{page} / {pages.length}</div>}
@@ -356,6 +506,7 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
                   className={item.page_no === page ? 'active' : ''}
                   onClick={() => {
                     setPage(item.page_no);
+                    resetViewerTransform();
                     setActivePanel(null);
                   }}
                 >
@@ -371,11 +522,17 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
               <section>
                 <h3>表示</h3>
                 <div className="segmentedControl">
-                  <button className={!spread ? 'active' : ''} onClick={() => setSpread(false)}>
+                  <button className={!spread ? 'active' : ''} onClick={() => {
+                    setSpread(false);
+                    resetViewerTransform();
+                  }}>
                     <AutoStoriesOutlinedIcon fontSize="small" />
                     <span>1ページ</span>
                   </button>
-                  <button className={spread ? 'active' : ''} onClick={() => setSpread(true)}>
+                  <button className={spread ? 'active' : ''} onClick={() => {
+                    setSpread(true);
+                    resetViewerTransform();
+                  }}>
                     <ViewCarouselOutlinedIcon fontSize="small" />
                     <span>見開き</span>
                   </button>
@@ -386,16 +543,25 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
                 <section>
                   <h3>見開き設定</h3>
                   <div className="segmentedControl">
-                    <button className={binding === 'rtl' ? 'active' : ''} onClick={() => setBinding('rtl')}>
+                    <button className={binding === 'rtl' ? 'active' : ''} onClick={() => {
+                      setBinding('rtl');
+                      resetViewerTransform();
+                    }}>
                       <SwapHorizIcon fontSize="small" />
                       <span>右綴じ</span>
                     </button>
-                    <button className={binding === 'ltr' ? 'active' : ''} onClick={() => setBinding('ltr')}>
+                    <button className={binding === 'ltr' ? 'active' : ''} onClick={() => {
+                      setBinding('ltr');
+                      resetViewerTransform();
+                    }}>
                       <SwapHorizIcon fontSize="small" />
                       <span>左綴じ</span>
                     </button>
                   </div>
-                  <button className={`settingRow ${offsetSpread ? 'active' : ''}`} onClick={() => setOffsetSpread((value) => !value)}>
+                  <button className={`settingRow ${offsetSpread ? 'active' : ''}`} onClick={() => {
+                    setOffsetSpread((value) => !value);
+                    resetViewerTransform();
+                  }}>
                     <TuneIcon fontSize="small" />
                     <span>見開き開始位置を1ページずらす</span>
                   </button>
@@ -464,6 +630,21 @@ function panelTitle(panel: 'pages' | 'settings' | 'meta'): string {
   if (panel === 'pages') return 'ページ';
   if (panel === 'settings') return '表示設定';
   return '情報';
+}
+
+function touchDistance(a: React.Touch, b: React.Touch): number {
+  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+}
+
+function touchMidpoint(a: React.Touch, b: React.Touch): { x: number; y: number } {
+  return {
+    x: (a.clientX + b.clientX) / 2,
+    y: (a.clientY + b.clientY) / 2
+  };
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
 }
 
 createRoot(document.getElementById('root')!).render(<App />);
