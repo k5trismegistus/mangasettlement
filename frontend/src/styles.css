@@ -153,6 +153,48 @@ button {
   width: 100%;
 }
 
+.pagination {
+  display: grid;
+  grid-template-columns: minmax(72px, 1fr) auto minmax(72px, 1fr);
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.pagination.bottom {
+  margin-top: 14px;
+  margin-bottom: 0;
+}
+
+.pagination span {
+  white-space: nowrap;
+}
+
+.pagination button {
+  min-height: 38px;
+  border-color: transparent;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--accent);
+  box-shadow: none;
+}
+
+.pagination button:first-child {
+  justify-self: start;
+}
+
+.pagination button:last-child {
+  justify-self: end;
+}
+
+.pagination button:disabled {
+  color: rgba(60, 60, 67, 0.32);
+  background: rgba(255, 255, 255, 0.38);
+}
+
 .libraryGrid {
   display: grid;
   grid-template-columns: 1fr;

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
 import AutoStoriesOutlinedIcon from '@mui/icons-material/AutoStoriesOutlined';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
@@ -26,6 +27,13 @@ type Library = {
   tags: string[];
   is_missing: boolean;
   updated_at: number;
+};
+
+type LibraryListResponse = {
+  items: Library[];
+  total: number;
+  limit: number;
+  offset: number;
 };
 
 type LibraryDetail = Library & {
@@ -78,6 +86,9 @@ type GestureState =
       startZoom: ZoomState;
     };
 
+// トップ一覧はサムネイル読み込みを抑えるため、API取得も20件単位にする。
+const HOME_PAGE_SIZE = 20;
+
 function App() {
   const [route, setRoute] = useState(() => parseRoute());
 
@@ -104,9 +115,14 @@ function HomePage({ navigate }: { navigate: (path: string) => void }) {
   const [tags, setTags] = useState<string[]>([]);
   const [q, setQ] = useState(initialQuery.get('q') ?? '');
   const [tag, setTag] = useState(initialQuery.get('tag') ?? '');
+  const [currentPage, setCurrentPage] = useState(() => Math.max(1, Number(initialQuery.get('page') ?? '1') || 1));
+  const [totalLibraries, setTotalLibraries] = useState(0);
   const [loading, setLoading] = useState(false);
   const [refreshJob, setRefreshJob] = useState<Job | null>(null);
   const [message, setMessage] = useState('');
+  const totalPages = Math.max(1, Math.ceil(totalLibraries / HOME_PAGE_SIZE));
+  const visibleStart = totalLibraries === 0 ? 0 : (currentPage - 1) * HOME_PAGE_SIZE + 1;
+  const visibleEnd = Math.min(totalLibraries, currentPage * HOME_PAGE_SIZE);
 
   useEffect(() => {
     void fetchTags().then(setTags);
@@ -117,12 +133,17 @@ function HomePage({ navigate }: { navigate: (path: string) => void }) {
       const params = new URLSearchParams();
       if (q) params.set('q', q);
       if (tag) params.set('tag', tag);
+      if (currentPage > 1) params.set('page', String(currentPage));
       const nextUrl = params.toString() ? `/?${params.toString()}` : '/';
       window.history.replaceState(null, '', nextUrl);
-      void loadLibraries(q, tag, setLibraries, setLoading);
+      void loadLibraries(q, tag, currentPage, setLibraries, setTotalLibraries, setLoading);
     }, 250);
     return () => window.clearTimeout(timer);
-  }, [q, tag]);
+  }, [currentPage, q, tag]);
+
+  useEffect(() => {
+    if (totalLibraries > 0 && currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalLibraries, totalPages]);
 
   useEffect(() => {
     if (!refreshJob || refreshJob.status === 'done' || refreshJob.status === 'error') return;
@@ -131,13 +152,13 @@ function HomePage({ navigate }: { navigate: (path: string) => void }) {
       setRefreshJob(job);
       if (job.status === 'done') {
         setMessage('更新完了');
-        void loadLibraries(q, tag, setLibraries, setLoading);
+        void loadLibraries(q, tag, currentPage, setLibraries, setTotalLibraries, setLoading);
         void fetchTags().then(setTags);
       }
       if (job.status === 'error') setMessage('更新失敗');
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [refreshJob, q, tag]);
+  }, [currentPage, refreshJob, q, tag]);
 
   const refresh = async () => {
     setMessage('更新中...');
@@ -159,11 +180,17 @@ function HomePage({ navigate }: { navigate: (path: string) => void }) {
       <section className="controls">
         <label className="controlField">
           <SearchIcon fontSize="small" />
-          <input value={q} onChange={(event) => setQ(event.target.value)} placeholder="ファイル名で検索" aria-label="ファイル名で検索" />
+          <input value={q} onChange={(event) => {
+            setQ(event.target.value);
+            setCurrentPage(1);
+          }} placeholder="ファイル名で検索" aria-label="ファイル名で検索" />
         </label>
         <label className="controlField">
           <LocalOfferOutlinedIcon fontSize="small" />
-          <select value={tag} onChange={(event) => setTag(event.target.value)} aria-label="タグで検索">
+          <select value={tag} onChange={(event) => {
+            setTag(event.target.value);
+            setCurrentPage(1);
+          }} aria-label="タグで検索">
             <option value="">すべてのタグ</option>
             {tags.map((item) => (
               <option key={item} value={item}>
@@ -187,6 +214,19 @@ function HomePage({ navigate }: { navigate: (path: string) => void }) {
 
       {loading ? <p className="empty">読み込み中...</p> : null}
       {!loading && libraries.length === 0 ? <p className="empty">ライブラリがありません</p> : null}
+      {!loading && totalLibraries > HOME_PAGE_SIZE ? (
+        <nav className="pagination" aria-label="ライブラリ一覧のページ">
+          <button onClick={() => setCurrentPage((value) => Math.max(1, value - 1))} disabled={currentPage <= 1}>
+            <ChevronLeftIcon fontSize="small" />
+            <span>前へ</span>
+          </button>
+          <span>{visibleStart}-{visibleEnd} / {totalLibraries}</span>
+          <button onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))} disabled={currentPage >= totalPages}>
+            <span>次へ</span>
+            <ChevronRightIcon fontSize="small" />
+          </button>
+        </nav>
+      ) : null}
       <section className="libraryGrid">
         {libraries.map((library) => (
           <article
@@ -217,6 +257,19 @@ function HomePage({ navigate }: { navigate: (path: string) => void }) {
           </article>
         ))}
       </section>
+      {!loading && totalLibraries > HOME_PAGE_SIZE ? (
+        <nav className="pagination bottom" aria-label="ライブラリ一覧のページ">
+          <button onClick={() => setCurrentPage((value) => Math.max(1, value - 1))} disabled={currentPage <= 1}>
+            <ChevronLeftIcon fontSize="small" />
+            <span>前へ</span>
+          </button>
+          <span>{visibleStart}-{visibleEnd} / {totalLibraries}</span>
+          <button onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))} disabled={currentPage >= totalPages}>
+            <span>次へ</span>
+            <ChevronRightIcon fontSize="small" />
+          </button>
+        </nav>
+      ) : null}
     </main>
   );
 }
@@ -615,14 +668,24 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
   );
 }
 
-async function loadLibraries(q: string, tag: string, setLibraries: (items: Library[]) => void, setLoading: (loading: boolean) => void) {
+async function loadLibraries(
+  q: string,
+  tag: string,
+  page: number,
+  setLibraries: (items: Library[]) => void,
+  setTotalLibraries: (total: number) => void,
+  setLoading: (loading: boolean) => void
+) {
   setLoading(true);
   try {
     const params = new URLSearchParams();
     if (q) params.set('q', q);
     if (tag) params.set('tag', tag);
-    const data = await api<{ items: Library[] }>(`/api/libraries?${params.toString()}`);
+    params.set('limit', String(HOME_PAGE_SIZE));
+    params.set('offset', String((page - 1) * HOME_PAGE_SIZE));
+    const data = await api<LibraryListResponse>(`/api/libraries?${params.toString()}`);
     setLibraries(data.items);
+    setTotalLibraries(data.total);
   } finally {
     setLoading(false);
   }
