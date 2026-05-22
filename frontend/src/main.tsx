@@ -106,10 +106,10 @@ function App() {
   if (route.libraryId) {
     return <ReaderPage libraryId={route.libraryId} navigate={navigate} />;
   }
-  return <HomePage navigate={navigate} />;
+  return <HomePage />;
 }
 
-function HomePage({ navigate }: { navigate: (path: string) => void }) {
+function HomePage() {
   const initialQuery = new URLSearchParams(window.location.search);
   const [libraries, setLibraries] = useState<Library[]>([]);
   const [tags, setTags] = useState<string[]>([]);
@@ -228,34 +228,29 @@ function HomePage({ navigate }: { navigate: (path: string) => void }) {
         </nav>
       ) : null}
       <section className="libraryGrid">
-        {libraries.map((library) => (
-          <article
-            key={library.id}
-            className="libraryCard"
-            onClick={() => navigate(`/libraries/${library.id}`)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') navigate(`/libraries/${library.id}`);
-            }}
-            role="button"
-            tabIndex={0}
-          >
-            <img src={library.cover_thumbnail_url} alt="" loading="lazy" />
-            <div className="libraryCardBody">
-              <h2>{library.file_name}</h2>
-              <p>
-                <LibraryBooksOutlinedIcon fontSize="inherit" />
-                {library.page_count}ページ
-              </p>
-              <div className="tagList">
-                {library.tags.map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
+        {libraries.map((library) => {
+          // 一覧から読書を始める時は、検索結果を残すため新しいタブで開く。
+          const libraryPath = `/libraries/${library.id}`;
+          return (
+            <a key={library.id} className="libraryCard" href={libraryPath} target="_blank" rel="noopener noreferrer">
+              <img src={library.cover_thumbnail_url} alt="" loading="lazy" />
+              <div className="libraryCardBody">
+                <h2>{library.file_name}</h2>
+                <p>
+                  <LibraryBooksOutlinedIcon fontSize="inherit" />
+                  {library.page_count}ページ
+                </p>
+                <div className="tagList">
+                  {library.tags.map((item) => (
+                    <span key={item}>{item}</span>
+                  ))}
+                </div>
+                {library.is_missing && <strong className="missing">ファイルなし</strong>}
               </div>
-              {library.is_missing && <strong className="missing">ファイルなし</strong>}
-            </div>
-            <ChevronRightIcon className="cardChevron" fontSize="small" />
-          </article>
-        ))}
+              <ChevronRightIcon className="cardChevron" fontSize="small" />
+            </a>
+          );
+        })}
       </section>
       {!loading && totalLibraries > HOME_PAGE_SIZE ? (
         <nav className="pagination bottom" aria-label="ライブラリ一覧のページ">
