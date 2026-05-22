@@ -14,6 +14,18 @@ npm run start
 
 `.env` の `BASIC_AUTH_USER` と `BASIC_AUTH_PASSWORD` は必ず変更してください。
 
+## 画面イメージ
+
+デモ画像のため、実際のマンガやファイル名は含めていません。
+
+### トップページ
+
+![トップページのデモ画像](docs/images/top-demo.svg)
+
+### ビューアー
+
+![ビューアーのデモ画像](docs/images/viewer-demo.svg)
+
 ## 使い方
 
 1. `library/` に `.zip` ファイルを配置します。
