@@ -16,15 +16,15 @@ npm run start
 
 ## 画面イメージ
 
-デモ画像のため、実際のマンガやファイル名は含めていません。
+同梱のデモ用 zip を使った本番画面のキャプチャです。
 
 ### トップページ
 
-![トップページのデモ画像](docs/images/top-demo.svg)
+![トップページのキャプチャ](docs/images/top-capture.png)
 
 ### ビューアー
 
-![ビューアーのデモ画像](docs/images/viewer-demo.svg)
+![ビューアーのキャプチャ](docs/images/viewer-capture.png)
 
 ## 使い方
 
