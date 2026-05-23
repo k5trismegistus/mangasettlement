@@ -583,6 +583,7 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
             <div className="thumbStrip">
               {pages.map((item) => (
                 <button
+                  type="button"
                   key={item.page_no}
                   className={item.page_no === page ? 'active' : ''}
                   onClick={() => {
@@ -591,7 +592,7 @@ function ReaderPage({ libraryId, navigate }: { libraryId: number; navigate: (pat
                     setActivePanel(null);
                   }}
                 >
-                  <img src={item.thumbnail_url} alt={`${item.page_no}ページ`} loading="lazy" />
+                  <img src={item.thumbnail_url} alt={`${item.page_no}ページ`} width={56} height={74} loading="lazy" />
                   <span>{item.page_no}</span>
                 </button>
               ))}
